@@ -17,7 +17,9 @@ namespace PdfReport.Api.Features.Report
             if(!request.StartDate.HasValue || !request.EndDate.HasValue) 
                 throw new ArgumentException("Start Date and End Date are required");
 
-            var rows = Enumerable.Range((int)request.StartDate.Value.Ticks, (int)request.EndDate.Value.Ticks)
+            var startRange = int.Parse(request.StartDate.Value.ToString("yyyyMMdd"));
+            var endRange = int.Parse(request.EndDate.Value.ToString("yyyyMMdd"));
+            var rows = Enumerable.Range(startRange, endRange)
                 .Select(i => new SampleReport.SampleRow
                 {
                     SampleFoo = i,

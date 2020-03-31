@@ -22,18 +22,15 @@ namespace PdfReport.Api.Features.Report
                 return;
             }
 
-            const string contentType = "application/pdf";
-
-            var fileName = GetReportName(model.Header, "pdf");
-            var renderer = GetConfiguredHtmlToPdfRenderer(model);
+            var renderer = await GetConfiguredHtmlToPdfRendererAsync(contextController, model);
             var viewHtml = await contextController.RenderViewAsync(model);
-            var pdf = renderer.RenderHtmlAsPdf(viewHtml);
-            var stream = pdf.Stream;
+            var pdf = await renderer.RenderHtmlAsPdfAsync(viewHtml);
+            var fileName = GetReportName(model.Header, "pdf");
 
-            resultContext.Result = contextController.File(stream, contentType, fileName);
+            resultContext.Result = contextController.File(pdf.Stream, "application/pdf", fileName);
         }
 
-        private HtmlToPdf GetConfiguredHtmlToPdfRenderer(SampleReport model)
+        private async Task<HtmlToPdf> GetConfiguredHtmlToPdfRendererAsync(Controller contextController, SampleReport model)
         {
             var renderer = new HtmlToPdf
             {
@@ -44,8 +41,8 @@ namespace PdfReport.Api.Features.Report
                     MarginTop = 8,
                     MarginLeft = 8,
                     MarginRight = 8,
-                    Header = RenderHeader(model.Header),
-                    Footer = RenderFooter(model.Footer),
+                    Header = await RenderHeaderAsync(contextController, model.Header),
+                    Footer = await RenderFooterAsync(contextController, model.Footer),
                     FitToPaperWidth = true,
                     Title = model.Header.ReportTitle
                 }
@@ -61,32 +58,9 @@ namespace PdfReport.Api.Features.Report
             return $"Report_{modelHeader.StartDate::yyyyMMdd}_{modelHeader.EndDate::yyyyMMdd}.{ext}";
         }
 
-        private static HtmlHeaderFooter RenderHeader(ReportHeader header)
+        private static async Task<HtmlHeaderFooter> RenderHeaderAsync(Controller contextController, ReportHeader header)
         {
-            var html = $@"
-<table style=""width: 100%; font-family: Consolas, Monospace;"">
-    <thead>
-        <tr>
-            <td style=""vertical-align:top; width:30%;"">
-                Sorted By: {header.SortedBy}
-            </td>
-            <td style=""text-align: center;"">
-                <h2 style=""margin: 0;"">{header.ReportTitle}</h2>
-            </td>
-            <td style=""text-align: right; vertical-align:top; width:30%;"">
-                Filters: {header.Filters}
-            </td>
-        </tr>
-        <tr>
-            <td>All times are local site times.</td>
-            <td style=""text-align: center;"">
-                {header.StartDate.LocalDateTime} - {header.EndDate.LocalDateTime}
-            </td>
-            <td></td>
-        </tr>
-    </thead>
-</table>
-";
+            var html = await contextController.RenderViewAsync("_SampleReportHeader", header);
             return new HtmlHeaderFooter
             {
                 Height = 20,
@@ -96,36 +70,15 @@ namespace PdfReport.Api.Features.Report
             };
         }
 
-        private static HtmlHeaderFooter RenderFooter(ReportFooter footer)
+        private static async Task<HtmlHeaderFooter> RenderFooterAsync(Controller contextController, ReportFooter footer)
         {
             var pageCount = "{page} of {total-pages}";
-            var html = $@"
-<table style=""width: 100%;"">
-    <thead>
-        <tr>
-            <td style=""width:30%;"">
-                Run On: {footer.ReportGenerationDateTime}
-            </td>
-            <td>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                By User: {footer.ReportRunByFullName}
-            </td>
-            <td style=""text-align: center;"">
-                {footer.Version}
-            </td>
-            <td style=""text-align: right;"">TEMP_PLACE_HOLDER_PAGE_COUNT</td>
-        </tr>
-    </thead>
-</table>"
-                .Replace("TEMP_PLACE_HOLDER_PAGE_COUNT", pageCount);
+            var html = await contextController.RenderViewAsync("_SampleReportFooter", footer);
 
             return new HtmlHeaderFooter
             {
                 Height = 20,
-                HtmlFragment = html,
+                HtmlFragment = html.Replace("TEMP_PLACE_HOLDER_PAGE_COUNT", pageCount),
                 DrawDividerLine = true,
                 Spacing = 5,
             };
