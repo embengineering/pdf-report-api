@@ -2,6 +2,7 @@
 using IronPdf;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using PdfReport.Api.Infrastructure;
 
 namespace PdfReport.Api.Features.Report
@@ -18,7 +19,7 @@ namespace PdfReport.Api.Features.Report
 
             if (model == null)
             {
-                resultContext.Result = new BadRequestObjectResult($"Unable to cast object result to {nameof(SampleReport)}");
+                resultContext.Result = new BadRequestObjectResult(objectResult?.Value);
                 return;
             }
 

@@ -14,11 +14,19 @@ namespace PdfReport.Api.Features.Report
         [ReportActionFilter]
         public async Task<ActionResult<SampleReport>> SampleReport([FromQuery]SampleReportRequest request)
         {
-            if(!request.StartDate.HasValue || !request.EndDate.HasValue) 
-                throw new ArgumentException("Start Date and End Date are required");
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            var startRange = int.Parse(request.StartDate.Value.ToString("yyyyMMdd"));
-            var endRange = int.Parse(request.EndDate.Value.ToString("yyyyMMdd"));
+            if (request.EndDate < request.StartDate)
+            {
+                ModelState.AddModelError(nameof(SampleReportRequest.EndDate), "End Date must be greater than Start Date");
+                return BadRequest(ModelState);
+            }
+
+            var startRange = int.Parse(request.StartDate.ToString("yyyyMMdd"));
+            var endRange = int.Parse(request.EndDate.ToString("yyyyMMdd"));
             var rows = Enumerable.Range(startRange, endRange)
                 .Select(i => new SampleReport.SampleRow
                 {
