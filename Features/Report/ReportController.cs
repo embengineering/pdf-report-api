@@ -32,7 +32,7 @@ namespace PdfReport.Api.Features.Report
                     StartDate = request.StartDate,
                     EndDate = request.EndDate
                 },
-                Rows = GetSampleReportRows(request),
+                Rows = await GetSampleReportRows(request),
                 Footer = new ReportFooter
                 {
                     ReportGenerationDateTime = DateTimeOffset.Now,
@@ -41,10 +41,10 @@ namespace PdfReport.Api.Features.Report
                 }
             };
 
-            return await Task.FromResult(sampleReport);
+            return sampleReport;
         }
 
-        private SampleReport.SampleRow[] GetSampleReportRows(SampleReportRequest request)
+        private Task<SampleReport.SampleRow[]> GetSampleReportRows(SampleReportRequest request)
         {
             var startRange = int.Parse(request.StartDate.ToString("yyyyMMdd"));
             var endRange = int.Parse(request.EndDate.ToString("yyyyMMdd"));
@@ -57,7 +57,7 @@ namespace PdfReport.Api.Features.Report
                 })
                 .Take(10000)
                 .ToArray();
-            return rows;
+            return Task.FromResult(rows);
         }
     }
 }
