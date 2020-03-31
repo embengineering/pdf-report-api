@@ -108,13 +108,10 @@ namespace PdfReport.Api.Features.Report
             </td>
             <td>
             </td>
-            <td style=""text-align: right; width:30%;"">
-                Site: {footer.SiteName}
-            </td>
         </tr>
         <tr>
             <td>
-                By User: {footer.ReportRunByFullName} ({footer.ReportRunByEmployeeNumber})
+                By User: {footer.ReportRunByFullName}
             </td>
             <td style=""text-align: center;"">
                 {footer.Version}

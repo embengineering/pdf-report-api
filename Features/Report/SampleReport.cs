@@ -35,10 +35,8 @@ namespace PdfReport.Api.Features.Report
     public class ReportFooter
     {
         public string Version { get; set; }
-        public string SiteName { get; set; }
         public DateTimeOffset ReportGenerationDateTime { get; set; }
         public string ReportRunByFullName { get; set; }
-        public string ReportRunByEmployeeNumber { get; set; }
     }
 
     public interface IReportResult<T>

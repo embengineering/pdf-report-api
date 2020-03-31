@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,8 +14,18 @@ namespace PdfReport.Api.Features.Report
         [ReportActionFilter]
         public async Task<ActionResult<SampleReport>> SampleReport([FromQuery]SampleReportRequest request)
         {
-            if(request.StartDate == null || request.EndDate == null) 
+            if(!request.StartDate.HasValue || !request.EndDate.HasValue) 
                 throw new ArgumentException("Start Date and End Date are required");
+
+            var rows = Enumerable.Range((int)request.StartDate.Value.Ticks, (int)request.EndDate.Value.Ticks)
+                .Select(i => new SampleReport.SampleRow
+                {
+                    SampleFoo = i,
+                    SampleBar = $"Bar {i}",
+                    SampleBaz = DateTimeOffset.Now.AddSeconds(-i)
+                })
+                .Take(10000)
+                .ToArray();
 
             var sampleReport = new SampleReport
             {
@@ -23,31 +34,12 @@ namespace PdfReport.Api.Features.Report
                     StartDate = (DateTimeOffset)request.StartDate,
                     EndDate = (DateTimeOffset)request.EndDate
                 },
-                Rows = new List<SampleReport.SampleRow>
-                {
-                    new SampleReport.SampleRow
-                    {
-                        SampleFoo = 1,
-                        SampleBar = "Bar 1",
-                        SampleBaz = DateTimeOffset.Now
-                    },
-                    new SampleReport.SampleRow
-                    {
-                        SampleFoo = 2,
-                        SampleBar = "Bar 2",
-                        SampleBaz = DateTimeOffset.Now
-                    },
-                    new SampleReport.SampleRow
-                    {
-                        SampleFoo = 3,
-                        SampleBar = "Bar 3",
-                        SampleBaz = DateTimeOffset.Now
-                    }
-                },
+                Rows = rows,
                 Footer = new ReportFooter
                 {
                     ReportGenerationDateTime = DateTimeOffset.Now,
-                    ReportRunByFullName = "John Doe"
+                    ReportRunByFullName = "John Doe",
+                    Version = "v1"
                 }
             };
 
