@@ -25,6 +25,27 @@ namespace PdfReport.Api.Features.Report
                 return BadRequest(ModelState);
             }
 
+            var sampleReport = new SampleReport
+            {
+                Header = new ReportHeader
+                {
+                    StartDate = request.StartDate,
+                    EndDate = request.EndDate
+                },
+                Rows = GetSampleReportRows(request),
+                Footer = new ReportFooter
+                {
+                    ReportGenerationDateTime = DateTimeOffset.Now,
+                    ReportRunByFullName = "John Doe",
+                    Version = "v1"
+                }
+            };
+
+            return await Task.FromResult(sampleReport);
+        }
+
+        private SampleReport.SampleRow[] GetSampleReportRows(SampleReportRequest request)
+        {
             var startRange = int.Parse(request.StartDate.ToString("yyyyMMdd"));
             var endRange = int.Parse(request.EndDate.ToString("yyyyMMdd"));
             var rows = Enumerable.Range(startRange, endRange)
@@ -36,24 +57,7 @@ namespace PdfReport.Api.Features.Report
                 })
                 .Take(10000)
                 .ToArray();
-
-            var sampleReport = new SampleReport
-            {
-                Header = new ReportHeader
-                {
-                    StartDate = (DateTimeOffset)request.StartDate,
-                    EndDate = (DateTimeOffset)request.EndDate
-                },
-                Rows = rows,
-                Footer = new ReportFooter
-                {
-                    ReportGenerationDateTime = DateTimeOffset.Now,
-                    ReportRunByFullName = "John Doe",
-                    Version = "v1"
-                }
-            };
-
-            return await Task.FromResult(sampleReport);
+            return rows;
         }
     }
 }
