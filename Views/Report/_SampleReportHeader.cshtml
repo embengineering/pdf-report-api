@@ -1,13 +1,13 @@
 ﻿@model PdfReport.Api.Features.Report.ReportHeader
 
-<table style="width: 100%; font-family: Consolas, Monospace;">
+<table style="width: 100%; font-family: Consolas, Monospace; font-size: 12px;">
     <thead>
     <tr>
-        <td style=" vertical-align:top; width:30%;">
+        <td style="vertical-align:top; width:30%;">
             Sorted By: @Model.SortedBy
         </td>
         <td style="text-align: center;">
-            <h2 style=" margin: 0;">@Model.ReportTitle</h2>
+            <h2 style="margin: 0;">@Model.ReportTitle</h2>
         </td>
         <td style="text-align: right; vertical-align:top; width:30%;">
             Filters: @Model.Filters

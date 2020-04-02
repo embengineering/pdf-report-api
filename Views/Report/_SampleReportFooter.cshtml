@@ -1,21 +1,21 @@
 ﻿@model PdfReport.Api.Features.Report.ReportFooter
 
-<table style="width: 100%;">
+<table style="width: 100%; font-family: Consolas, Monospace; font-size: 12px;">
     <thead>
-    <tr>
-        <td style="width:30%;">
-            Run On: @Model.ReportGenerationDateTime
-        </td>
-        <td>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            By User: @Model.ReportRunByFullName
-        </td>
-        <td style="text-align: center;">
-            @Model.Version
-        </td>
-    </tr>
+	    <tr>
+	        <td style="width:30%;">
+	            Run On: @Model.ReportGenerationDateTime
+	        </td>
+	        <td>
+	        </td>
+	    </tr>
+	    <tr>
+	        <td>
+	            By User: @Model.ReportRunByFullName
+	        </td>
+	        <td style="text-align: center;">
+	            @Model.Version
+	        </td>
+	    </tr>
     </thead>
 </table>
