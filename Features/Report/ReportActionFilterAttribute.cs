@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
-using IronPdf;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using PdfReport.Api.Infrastructure;
+using SelectPdf;
 
 namespace PdfReport.Api.Features.Report
 {
@@ -23,66 +22,73 @@ namespace PdfReport.Api.Features.Report
                 return;
             }
 
-            var renderer = await GetConfiguredHtmlToPdfRendererAsync(contextController, model);
-            var viewHtml = await contextController.RenderViewAsync(model);
-            var pdf = await renderer.RenderHtmlAsPdfAsync(viewHtml);
+            var html = await contextController.RenderViewAsync(model);
             var fileName = GetReportName(model.Header, "pdf");
+            var pdfBytes = await ConvertHtmlToPdfAsync(contextController, html, model);
 
-            resultContext.Result = contextController.File(pdf.Stream, "application/pdf", fileName);
+            resultContext.Result = contextController.File(pdfBytes, "application/pdf", fileName);
         }
 
-        private async Task<HtmlToPdf> GetConfiguredHtmlToPdfRendererAsync(Controller contextController, SampleReport model)
+        private async Task<byte[]> ConvertHtmlToPdfAsync(Controller contextController, string htmlBody, SampleReport model)
         {
-            var renderer = new HtmlToPdf
+            var baseUrl = $"{contextController.Request.Scheme}://{contextController.Request.Host}{contextController.Request.PathBase}";
+            var converter = new HtmlToPdf();
+
+            // general options
+            converter.Options.MarginTop = 30;
+            converter.Options.MarginBottom = 30;
+            converter.Options.MarginLeft = 30;
+            converter.Options.MarginRight = 30;
+            converter.Options.DisplayHeader = true;
+            converter.Options.DisplayFooter = true;
+
+            // header settings
+            converter.Header.DisplayOnFirstPage = true;
+            converter.Header.DisplayOnOddPages = true;
+            converter.Header.DisplayOnEvenPages = true;
+
+            // add header
+            var htmlHeader = await contextController.RenderViewAsync("_SampleReportHeader", model.Header);
+            var headerSection = new PdfHtmlSection(htmlHeader, baseUrl)
             {
-                PrintOptions =
-                {
-                    PaperOrientation = PdfPrintOptions.PdfPaperOrientation.Landscape,
-                    MarginBottom = 8,
-                    MarginTop = 8,
-                    MarginLeft = 8,
-                    MarginRight = 8,
-                    Header = await RenderHeaderAsync(contextController, model.Header),
-                    Footer = await RenderFooterAsync(contextController, model.Footer),
-                    FitToPaperWidth = true,
-                    Title = model.Header.ReportTitle
-                }
+                AutoFitHeight = HtmlToPdfPageFitMode.AutoFit
             };
+            converter.Header.Add(headerSection);
 
-            renderer.PrintOptions.FitToPaperWidth = true;
+            // footer settings
+            converter.Footer.DisplayOnFirstPage = true;
+            converter.Footer.DisplayOnOddPages = true;
+            converter.Footer.DisplayOnEvenPages = true;
 
-            return renderer;
+            // add footer
+            var htmlFooter = await contextController.RenderViewAsync("_SampleReportFooter", model.Footer);
+            var footerSection = new PdfHtmlSection(htmlFooter, baseUrl)
+            {
+                AutoFitHeight = HtmlToPdfPageFitMode.AutoFit
+            };
+            converter.Footer.Add(footerSection);
+
+            // page numbers can be added using a PdfTextSection object
+            var text = new PdfTextSection(0, 10,
+                "{page_number} of {total_pages}  ",
+                new System.Drawing.Font("Arial", 8))
+            {
+                HorizontalAlign = PdfTextHorizontalAlign.Right
+            };
+            converter.Footer.Add(text);
+
+            // set converter options
+            converter.Options.PdfPageSize = PdfPageSize.Letter;
+            converter.Options.PdfPageOrientation = PdfPageOrientation.Landscape;
+
+            var doc = converter.ConvertHtmlString(htmlBody, baseUrl);
+
+            return doc.Save();
         }
 
         private static string GetReportName(ReportHeader modelHeader, string ext)
         {
             return $"Report_{modelHeader.StartDate::yyyyMMdd}_{modelHeader.EndDate::yyyyMMdd}.{ext}";
-        }
-
-        private static async Task<HtmlHeaderFooter> RenderHeaderAsync(Controller contextController, ReportHeader header)
-        {
-            var html = await contextController.RenderViewAsync("_SampleReportHeader", header);
-            return new HtmlHeaderFooter
-            {
-                Height = 20,
-                HtmlFragment = html,
-                DrawDividerLine = true,
-                Spacing = 5,
-            };
-        }
-
-        private static async Task<HtmlHeaderFooter> RenderFooterAsync(Controller contextController, ReportFooter footer)
-        {
-            var pageCount = "{page} of {total-pages}";
-            var html = await contextController.RenderViewAsync("_SampleReportFooter", footer);
-
-            return new HtmlHeaderFooter
-            {
-                Height = 20,
-                HtmlFragment = html.Replace("TEMP_PLACE_HOLDER_PAGE_COUNT", pageCount),
-                DrawDividerLine = true,
-                Spacing = 5,
-            };
         }
     }
 }
