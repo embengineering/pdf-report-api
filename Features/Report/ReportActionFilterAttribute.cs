@@ -35,6 +35,10 @@ namespace PdfReport.Api.Features.Report
             var converter = new HtmlToPdf();
 
             // general options
+            converter.Options.PdfPageSize = PdfPageSize.Letter;
+            converter.Options.PdfPageOrientation = PdfPageOrientation.Landscape;
+            converter.Options.WebPageWidth = 1024;
+            converter.Options.WebPageHeight = 0;
             converter.Options.MarginTop = 30;
             converter.Options.MarginBottom = 30;
             converter.Options.MarginLeft = 30;
@@ -71,7 +75,7 @@ namespace PdfReport.Api.Features.Report
             // page numbers can be added using a PdfTextSection object
             var text = new PdfTextSection(0, 10,
                 "{page_number} of {total_pages}  ",
-                new System.Drawing.Font("Arial", 8))
+                new System.Drawing.Font("Consolas, Monospace", 12))
             {
                 HorizontalAlign = PdfTextHorizontalAlign.Right
             };
